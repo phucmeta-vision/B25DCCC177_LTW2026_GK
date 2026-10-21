@@ -6,8 +6,8 @@ const ExpenseTable = ({ expenses, onDelete, onToggle }) => (
       <tr>
         <th>Khoản chi</th>
         <th>Số tiền</th>
-        <th>Danh mục</th>
-        <th>Ngày</th>
+        <th className="col-category">Danh mục</th>
+        <th className="col-date">Ngày</th>
         <th>Trạng thái</th>
         <th>Thao tác</th>
       </tr>

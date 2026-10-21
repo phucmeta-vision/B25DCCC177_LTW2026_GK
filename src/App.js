@@ -8,25 +8,51 @@ import ExpenseList from './pages/ExpenseList';
 import AddExpense from './pages/AddExpense';
 import ExpenseDetail from './pages/ExpenseDetail';
 
+const STORAGE_KEY = 'gk_expenses';
+
 const App = () => {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Mounting: tải dữ liệu từ API
+  // Mounting: đọc dữ liệu đã lưu, nếu chưa có thì gọi API
   useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        setExpenses(JSON.parse(saved));
+        setLoading(false);
+        return undefined;
+      } catch (err) {
+        // dữ liệu lưu bị hỏng -> gọi API
+      }
+    }
+
+    const controller = new AbortController();
     axios
-      .get('/data/expenses.json')
+      .get('/data/expenses.json', { signal: controller.signal })
       .then((res) => {
         setExpenses(res.data);
+        setLoading(false);
       })
       .catch((err) => {
+        if (axios.isCancel(err)) return;
         setError(err.message || 'error');
-      })
-      .finally(() => {
         setLoading(false);
       });
+
+    // Unmounting: hủy request đang chạy
+    return () => {
+      controller.abort();
+    };
   }, []);
+
+  // Updating: lưu dữ liệu sau khi đã tải xong
+  useEffect(() => {
+    if (!loading && !error) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
+    }
+  }, [expenses, loading, error]);
 
   const addExpense = (newExpense) => {
     setExpenses((prev) => {

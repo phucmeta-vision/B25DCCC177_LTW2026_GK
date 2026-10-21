@@ -17,7 +17,8 @@ body {
   color: #333;
 }
 
-.active {
+.active,
+.navbar a.active {
   color: red;
   font-weight: bold;
 }
@@ -73,4 +74,15 @@ td button {
 .error-msg {
   color: red;
   margin-top: 10px;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.mobile .col-category,
+.mobile .col-date {
+  display: none;
 }
