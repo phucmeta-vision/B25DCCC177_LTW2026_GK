@@ -1,25 +1,69 @@
-import logo from './logo.svg';
+import { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import axios from 'axios';
 import './App.css';
+import Layout from './components/Layout';
+import Home from './pages/Home';
+import ExpenseList from './pages/ExpenseList';
+import AddExpense from './pages/AddExpense';
+import ExpenseDetail from './pages/ExpenseDetail';
 
-function App() {
+const App = () => {
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Mounting: tải dữ liệu từ API
+  useEffect(() => {
+    axios
+      .get('/data/expenses.json')
+      .then((res) => {
+        setExpenses(res.data);
+      })
+      .catch((err) => {
+        setError(err.message || 'error');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const addExpense = (newExpense) => {
+    setExpenses((prev) => {
+      const maxId = prev.reduce((max, item) => (item.id > max ? item.id : max), 0);
+      return [...prev, { ...newExpense, id: maxId + 1, paid: false }];
+    });
+  };
+
+  const deleteExpense = (id) => {
+    setExpenses((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const togglePaid = (id) => {
+    setExpenses((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, paid: !item.paid } : item))
+    );
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/" element={<Layout loading={loading} error={error} />}>
+        <Route index element={<Home expenses={expenses} />} />
+        <Route
+          path="expenses"
+          element={
+            <ExpenseList
+              expenses={expenses}
+              onDelete={deleteExpense}
+              onToggle={togglePaid}
+            />
+          }
+        />
+        <Route path="expenses/new" element={<AddExpense onAdd={addExpense} />} />
+        <Route path="expenses/:id" element={<ExpenseDetail expenses={expenses} />} />
+      </Route>
+    </Routes>
   );
-}
+};
 
 export default App;
